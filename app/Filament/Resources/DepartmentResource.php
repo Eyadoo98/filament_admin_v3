@@ -30,6 +30,17 @@ class DepartmentResource extends Resource
 
     protected static ?int $navigationSort = 4; //for order in the sidebar
 
+    //    protected static ?string $recordTitleAttribute = 'first_name';//for add global search
+
+
+    public static function getNavigationBadge(): ?string //for add count badge in the sidebar
+    {
+        return static::getModel()::query()->count();
+    }
+    public static function getNavigationBadgeColor(): string|array|null //for change color badge in the sidebar
+    {
+        return 'warning';
+    }
 
     public static function form(Form $form): Form
     {

@@ -9,6 +9,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -49,22 +50,31 @@ class CityResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('state.name')
-                    ->searchable(isIndividual: true)// isIndividual: true for search in this column only
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(isIndividual: true)// isIndividual: true for search in this column only                Tables\Columns\TextColumn::make('created_at')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
-            ])
+        $cardFields = array();
+        foreach (config('translatable.locales') as $locale => $name) {
+            $translatedLabel = ucfirst(__($name));
+            $cardFields[] = TextColumn::make($locale . '.name')
+                ->label(__('City.' . $translatedLabel . 'Name'))->getStateUsing(
+                    function ($record) use ($locale) {
+                        $translation = $record->getTranslation($locale);
+                        return $translation->name;
+                    }
+                );
+        }
+        $cardFields[] = Tables\Columns\TextColumn::make('state.name')
+            ->searchable(isIndividual: true)// isIndividual: true for search in this column only
+            ->sortable();
+        $cardFields[] = Tables\Columns\TextColumn::make('name')
+            ->searchable(isIndividual: true)// isIndividual: true for search in this column only                Tables\Columns\TextColumn::make('created_at')
+            ->sortable();
+        $cardFields [] = Tables\Columns\TextColumn::make('updated_at')
+            ->dateTime()
+            ->sortable()
+            ->toggleable(isToggledHiddenByDefault: true);
+        return $table->columns($cardFields)
+        ->filters([
+            //
+        ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),

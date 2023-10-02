@@ -9,11 +9,14 @@ use App\Models\Employee;
 use App\Models\State;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class EmployeeResource extends Resource
@@ -29,6 +32,18 @@ class EmployeeResource extends Resource
     protected static ?string $slug = 'employee'; //for changing the url
 
     protected static ?string $navigationGroup = 'Employee Management'; //for grouping in the sidebar
+
+//    protected static ?string $recordTitleAttribute = 'first_name';//for add global search
+
+    public static function getNavigationBadge(): ?string //for add count badge in the sidebar
+    {
+        return static::getModel()::query()->count();
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null //for change color badge in the sidebar
+    {
+        return 'Green';
+    }
 
     public static function form(Form $form): Form
     {
@@ -160,11 +175,62 @@ class EmployeeResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
-            ])
+                Tables\Filters\SelectFilter::make('Department')
+                    ->relationship('department', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Filet by Department ')
+                    ->indicator('Department'),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if ($data['from'] ?? null) {
+                            $indicators['from'] = 'Created from ' . Carbon::parse($data['from'])->toFormattedDateString();
+                        }
+
+                        if ($data['until'] ?? null) {
+                            $indicators['until'] = 'Created until ' . Carbon::parse($data['until'])->toFormattedDateString();
+                        }
+
+                        return $indicators;
+                    })->columnSpan(2)->columns(2),
+            ], layout: Tables\Enums\FiltersLayout::AboveContentCollapsible)->filtersFormColumns(3)
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->successNotificationTitle('Employee Deleted Successfully'),//for custom deleted message
+
+//                you can do that
+//                Tables\Actions\DeleteAction::make()
+//                    ->successNotification(
+//                      Notification::make()
+//                          ->success()
+//                          ->title('Employee Deleted Successfully')
+//                          ->body('The employee has been Deleted.'),
+//                    )
+
+//            or if you want to remove the notification
+//                Tables\Actions\DeleteAction::make()
+//                    ->successNotification(null)
+
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

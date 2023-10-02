@@ -7,6 +7,8 @@ use App\Filament\Resources\StateResource\RelationManagers;
 use App\Models\State;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -52,7 +54,7 @@ class StateResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('country.name')
-                    ->searchable(isIndividual: true,isGlobal: false)// isIndividual: true for search in this column only isGlobal: false for prevent on global search
+                    ->searchable(isIndividual: true, isGlobal: false)// isIndividual: true for search in this column only isGlobal: false for prevent on global search
                     ->sortable(),
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(isIndividual: true),//for search in this column only
@@ -82,6 +84,20 @@ class StateResource extends Resource
                 Tables\Actions\CreateAction::make(),
             ]);
     }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+//                Forms\Components\Section::make('State Info')
+//                    ->schema([
+                        TextEntry::make('country.name'),
+                        TextEntry::make('name')->label('State Name'),
+//                    ])
+            ]);
+
+    }
+
 
     public static function getRelations(): array
     {

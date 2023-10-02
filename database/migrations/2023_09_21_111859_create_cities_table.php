@@ -17,6 +17,14 @@ return new class extends Migration
             $table->string('name');
             $table->timestamps();
         });
+
+        Schema::create('city_translations', function (Blueprint $table) {
+            $table->id();
+            $table->foreignIdFor(\App\Models\City::class);
+            $table->string('locale')->index();
+            $table->string('name')->nullable();
+            $table->unique(['city_id', 'locale'])->nullable();
+        });
     }
 
     /**
@@ -25,5 +33,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('cities');
+        Schema::dropIfExists('city_translations');
     }
 };

@@ -27,6 +27,15 @@ class UserResource extends Resource
 
     protected static ?string $navigationGroup = 'User Management'; //for grouping in the sidebar
 
+    public static function getNavigationBadge(): ?string //for add count badge in the sidebar
+    {
+        return static::getModel()::query()->count();
+    }
+    public static function getNavigationBadgeColor(): string|array|null //for change color badge in the sidebar
+    {
+        return 'info';
+    }
+
     public static function form(Form $form): Form
     {
         return $form
